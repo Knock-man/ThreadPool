@@ -148,7 +148,7 @@ public:
 
     Thread(ThreadFunc func);
     ~Thread();
-
+ 
     //启动线程
     void start();
 private:

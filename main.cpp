@@ -18,7 +18,7 @@ public:
         return a_;
     }  
     private:
-        int a_;
+        int a_;  
         int b_;
 };
 int main()
