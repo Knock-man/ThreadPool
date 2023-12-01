@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-const int TASK_MAX_THRESHHOLD = 1024;
+const int TASK_MAX_THRESHHOLD = 5;
 
 
 ////////////////////////////////////线程池方法实现
@@ -35,7 +35,7 @@ void ThreadPool::setTaskQueMaxThreadHold(size_t threadhold)
 }
 
 //给线程池提交任务 用户调用该接口，传入任务对象
-void ThreadPool::submitTask(std::shared_ptr<Task> sp)
+Result ThreadPool::submitTask(std::shared_ptr<Task> sp)
 {
     //获取锁
     std::unique_lock<std::mutex> lock(taskQueMtx_);
@@ -54,7 +54,7 @@ void ThreadPool::submitTask(std::shared_ptr<Task> sp)
     {
         //表示notFull_等待1s钟，条件依然没有满足
         std::cerr<<"task queue is full, submit task fail."<<std::endl;
-        return;
+        return Result(sp,false);
     }
 
     //如果有空余，把任务队列放入任务队列中 
@@ -63,6 +63,9 @@ void ThreadPool::submitTask(std::shared_ptr<Task> sp)
 
     //因为新放了任务，任务队列肯定不空了,notEmpty_上进行通知,赶快分配线程执行任务
     notEmpty_.notify_all();
+
+    //返回任务的Result对象
+    return Result(sp);
 }
 
 //开启线程池
@@ -72,7 +75,7 @@ void ThreadPool::start(size_t initThreadSize)
     initThreadSize_ = initThreadSize;
 
     //创建线程对象
-    for(int i=0; i<initThreadSize_ ; i++)
+    for(int i=0; i < (int)initThreadSize_ ; i++)
     {
        
         std::unique_ptr<Thread> ptr = std::make_unique<Thread>(std::bind(&ThreadPool::threadFunc,this));
@@ -82,7 +85,7 @@ void ThreadPool::start(size_t initThreadSize)
     }
 
     //启动所有线程
-    for(int i=0; i<initThreadSize_ ; i++)
+    for(int i=0; i < (int)initThreadSize_ ; i++)
     {
         threads_[i]->start();
     }
@@ -122,10 +125,28 @@ void ThreadPool::threadFunc()
         //当前线程负责执行这个任务
         if(task != nullptr)
         {
-            task->run();
+            task->exec();
             
         }
         
+    }
+}
+
+//////////////////////////////Task方法实现
+Task::Task()
+    :result_(nullptr)
+{}
+
+
+void Task::setResult(Result* res)
+{
+    result_ = res;
+}
+void Task::exec()
+{
+    if(result_ != nullptr)
+    {
+        result_->setVal(run());//这里发生多态调用
     }
 }
 
@@ -148,5 +169,31 @@ void Thread::start()
     //创建一个线程来执行线程函数
     std::thread t(func_);
     t.detach();
+
+}
+
+////////////////////Result方法实现
+Result::Result(std::shared_ptr<Task> task, bool isValid)
+        :task_(task),
+        isValid_(isValid)
+{
+    task_->setResult(this);
+}
+
+Any Result::get()//用户调用的
+{
+    if(!isValid_)
+    {
+        return "";
+    }
+    sem_.wait();//task任务如果没有执行完，这里会阻塞用户的线程
+    return std::move(any_);
+};
+
+void Result::setVal(Any any)
+{
+    //存储task的返回值
+    this->any_ = std::move(any);
+    sem_.post(); //已经获取的任务的返回值，增加信号量资源
 
 }
