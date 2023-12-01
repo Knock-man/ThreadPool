@@ -144,15 +144,18 @@ class Thread
 {
 public:
     //线程函数对象类型
-    using ThreadFunc = std::function<void()>;
+    using ThreadFunc = std::function<void(int)>;
 
     Thread(ThreadFunc func);
     ~Thread();
  
+    int getId()const;
     //启动线程
     void start();
 private:
     ThreadFunc func_;
+    static int generateId_;
+    int threadId_;//保存线程id
 
 private:
 
@@ -185,6 +188,9 @@ public:
     //设置任务队列上限阈值
     void setTaskQueMaxThreadHold(size_t threadhold);
 
+    //设置线程池cached模式下线程阈值
+    void setThreadSizeThreshHold(size_t threadhold);
+
     //给线程池提交任务
     Result submitTask(std::shared_ptr<Task> sp);
 
@@ -197,15 +203,22 @@ public:
 
 private:
     //定义线程函数
-    void threadFunc();
+    void threadFunc(int threadid);
+
+    //检查pool的运行状态
+    bool checkRuningState() const;
 
 
 private:
-    std::vector<std::unique_ptr<Thread>> threads_; //线程列表
+    //std::vector<std::unique_ptr<Thread>> threads_; //线程列表
+    std::unordered_map<int,std::unique_ptr<Thread>> threads_; //线程列表
     std::size_t initThreadSize_; //初始的线程数量
+    std::atomic_int curThreadSize_;  //记录当前线程池里面线程的总数量
+    std::size_t threadSizeThreadHold_;//线程数量的上限阈值
+    std::atomic_int idleThreadSize_; //记录空闲线程的数量
 
     std::queue<std::shared_ptr<Task>> taskQue_; //任务队列
-    std::atomic_uint taskSize_; //任务的数量
+    std::atomic_int taskSize_; //任务的数量
     size_t taskQueMaxThreshHold_;   //任务队列数量上限阈值
 
     //线程通信
@@ -214,6 +227,9 @@ private:
     std::condition_variable notEmpty_; //表示任务队列不空
 
     PoolMode poolMode_; //当前线程池的工作模式
+    std::atomic_bool isPoolRuning_;//表示当前线程池的启动状态
+
+    
     
     
     
