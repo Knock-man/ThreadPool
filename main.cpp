@@ -13,7 +13,7 @@ public:
         //std::this_thread::sleep_for(std::chrono::seconds(1));
         for(int i=a_+1;i<=b_;i++)
         {
-            a_+=i;
+            a_+=i; 
         }
         return a_;
     }  
@@ -35,7 +35,7 @@ int main()
     Result res3 = pool.submitTask(std::make_shared<MyTask>(11,15));
     int sum3 = res3.get().case_<int>();
 
-    std::cout<<"sum="<<sum1+sum2<<std::endl;
+    std::cout<<"sum="<<sum1+sum2+sum3<<std::endl;
 
     
     getchar();

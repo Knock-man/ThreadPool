@@ -134,7 +134,7 @@ class Task
 };
 
 //线程池支持的模式
-enum class PoolMode
+enum class PoolMode 
 {
     MODE_FIXED, //固定线程数量的线程池
     MODE_CACHED, //线程数量动态增长线程池
