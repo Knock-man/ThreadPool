@@ -10,7 +10,7 @@ public:
     {
         std::cout<<"begin threadFunc  tid:"<<std::this_thread::get_id()<<std::endl;
         
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::seconds(3));
         for(int i=a_+1;i<=b_;i++)
         {
             a_+=i; 
@@ -32,23 +32,23 @@ int main()
 
     //将任务提交给线程池
     Result res1 = pool.submitTask(std::make_shared<MyTask>(1,5));
-    Result res2 = pool.submitTask(std::make_shared<MyTask>(6,10));
-    Result res3 = pool.submitTask(std::make_shared<MyTask>(11,15));
-    for(int i=0;i<10;i++)
-    {
-        pool.submitTask(std::make_shared<MyTask>(1,5));
-    }
+    // Result res2 = pool.submitTask(std::make_shared<MyTask>(6,10));
+    // Result res3 = pool.submitTask(std::make_shared<MyTask>(11,15));
+    // for(int i=0;i<10;i++)
+    // {
+    //     pool.submitTask(std::make_shared<MyTask>(1,5));
+    // }
     
    
   
  
 
     int sum1 = res1.get().case_<int>();//获取结果会等线程执行结束，必须放在最后防止阻塞
-    int sum2 = res2.get().case_<int>();
-    int sum3 = res3.get().case_<int>();
+    // int sum2 = res2.get().case_<int>();
+    // int sum3 = res3.get().case_<int>();
 
 
-    std::cout<<"sum="<<sum1+sum2+sum3<<std::endl;
+    //std::cout<<"sum="<<sum1+sum2+sum3<<std::endl;
 
     
     getchar();

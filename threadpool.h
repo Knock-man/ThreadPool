@@ -4,6 +4,7 @@
 #include <vector>
 #include <queue>
 #include <memory>
+#include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
@@ -195,11 +196,11 @@ public:
     Result submitTask(std::shared_ptr<Task> sp);
 
     //开启线程池
-    void start(size_t initThreadSize = 4);//初始线程数量
+    void start(size_t initThreadSize = std::thread::hardware_concurrency());//初始线程数量
 
     //禁止拷贝构造和赋值构造
-    ThreadPool(const ThreadPool&) = delete;
-    ThreadPool& operator=(const ThreadPool&) = delete;
+    ThreadPool(const ThreadPool&) = delete; 
+    ThreadPool& operator=(const ThreadPool&) = delete; 
 
 private:
     //定义线程函数

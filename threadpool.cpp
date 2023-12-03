@@ -4,7 +4,7 @@
 
 const int TASK_MAX_THRESHHOLD = INT32_MAX;
 const int THREAD_MAX_THRESHHOLD = 100;
-const int THREAD_MAX_IDLE_TIME = 60;//单位s
+const int THREAD_MAX_IDLE_TIME = 6;//单位s
 
 ////////////////////////////////////线程池方法实现
 
@@ -25,9 +25,9 @@ ThreadPool::ThreadPool()
 ThreadPool::~ThreadPool()
 {
     isPoolRuning_ = false;
-    notEmpty_.notify_all();
     //等待线程池里面所有的线程返回 有两种状态：阻塞 & 正在执行任务中
     std::unique_lock<std::mutex> lock(taskQueMtx_);
+    notEmpty_.notify_all();
     exitCond_.wait(lock,[&]()->bool{
         return threads_.size() == 0;
     });
@@ -69,7 +69,7 @@ Result ThreadPool::submitTask(std::shared_ptr<Task> sp)
     //     notFull_.wait(lock);
     // }
     //用户提交任务，最长不能阻塞超过1s，否则判断任务提交失败
-    std::cout<<"threadid"<<std::this_thread::get_id()<<"尝试获取任务!"<<std::endl;
+    
     bool flag = notFull_.wait_for( lock,
                                 std::chrono::seconds(1),
                                 [&]()->bool{ return taskQue_.size() < taskQueMaxThreshHold_; } 
@@ -80,7 +80,6 @@ Result ThreadPool::submitTask(std::shared_ptr<Task> sp)
         std::cerr<<"task queue is full, submit task fail."<<std::endl;
         return Result(sp,false);
     }
-    std::cout<<"threadid"<<std::this_thread::get_id()<<"获取任务成功!"<<std::endl;
 
     //如果有空余，把任务队列放入任务队列中 
     taskQue_.emplace(sp);
@@ -138,6 +137,7 @@ void ThreadPool::start(size_t initThreadSize)
         
     }
 }
+
 bool ThreadPool::checkRuningState() const
 {
     return isPoolRuning_;
@@ -152,6 +152,7 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
     {
         std::shared_ptr<Task> task;
         {//保证取出任务立马释放锁，让别的线程去取任务，而不是等到任务执行结束再释放
+        std::cout<<"threadid"<<std::this_thread::get_id()<<"尝试获取任务!"<<std::endl;
             //先获取锁
             std::unique_lock<std::mutex> lock(taskQueMtx_);
             
@@ -159,7 +160,7 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
             //(超过initThreadSize数量的线程要进行回收)
             //当前时间 - 上一次线程执行的时间 > 60s
                 //每一秒中返回一次 怎么区分：超时返回？还是任务执行返回
-            while(taskQue_.size() == 0)
+            while(isPoolRuning_ && taskQue_.size() == 0)
             {
                 if(poolMode_ == PoolMode::MODE_CACHED)
                 {
@@ -187,19 +188,13 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
                     //等待notEmpty条件
                     notEmpty_.wait(lock);
                 }
-
+                
                 //线程池要结束，回收线程资源
                 if(!isPoolRuning_)
                 {
-                    threads_.erase(threadid);
-                    std::cout<<"threadid"<<std::this_thread::get_id()<<"exit!"<<std::endl;
-                    exitCond_.notify_all();
-                    return;
+                   break;
                 }
-                    
             }
-            
-          
             
             idleThreadSize_--;
 
@@ -207,6 +202,7 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
             task = taskQue_.front();
             taskQue_.pop();
             taskSize_--;
+            std::cout<<"threadid"<<std::this_thread::get_id()<<"获取任务成功!"<<std::endl;
         }
 
         //如果依然有剩余任务，继续通知其它的线程执行任务
@@ -230,7 +226,7 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
     }
 
     threads_.erase(threadid);
-    std::cout<<"threadid"<<std::this_thread::get_id()<<"exit!"<<std::endl;
+    std::cout<<"===threadid"<<std::this_thread::get_id()<<"exit===!"<<std::endl;
     exitCond_.notify_all();
 }
 
@@ -244,6 +240,7 @@ void Task::setResult(Result* res)
 {
     result_ = res;
 }
+
 void Task::exec()
 {
     if(result_ != nullptr)
@@ -264,6 +261,7 @@ Thread::Thread(ThreadFunc func)
     
 
 }
+
 Thread::~Thread()
 {
     
