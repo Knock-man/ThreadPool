@@ -91,7 +91,6 @@ Result ThreadPool::submitTask(std::shared_ptr<Task> sp)
     //cached模式，任务处理比较紧急 场景：小而快的任务 需要根据任务数量和空闲线程的数量，判断是否需要创建新的线程出来
     if(poolMode_ == PoolMode::MODE_CACHED && taskSize_ > idleThreadSize_ && curThreadSize_ < (int)threadSizeThreadHold_)
     {
-        std::cout<<">>>>>创建了新线程>>>>>>"<<std::endl;
 
         //创建新线程
         std::unique_ptr<Thread> ptr = std::make_unique<Thread>(std::bind(&ThreadPool::threadFunc,this,std::placeholders::_1));
@@ -152,7 +151,6 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
     {
         std::shared_ptr<Task> task;
         {//保证取出任务立马释放锁，让别的线程去取任务，而不是等到任务执行结束再释放
-        std::cout<<"threadid"<<std::this_thread::get_id()<<"尝试获取任务!"<<std::endl;
             //先获取锁
             std::unique_lock<std::mutex> lock(taskQueMtx_);
             
@@ -165,7 +163,6 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
                 if(!isPoolRuning_)
                 {
                     threads_.erase(threadid);
-                    std::cout<<"===threadid"<<std::this_thread::get_id()<<"exit===!"<<std::endl;
                     exitCond_.notify_all();
                     return;//线程函数结束线程结束
                 }
@@ -184,7 +181,6 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
                             threads_.erase(threadid);
                             curThreadSize_--;
                             idleThreadSize_--;
-                            std::cout<<"threadid"<<std::this_thread::get_id()<<"exit!"<<std::endl;
                             return;
                         }
                     }
@@ -204,7 +200,6 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
             task = taskQue_.front();
             taskQue_.pop();
             taskSize_--;
-            std::cout<<"threadid"<<std::this_thread::get_id()<<"获取任务成功!"<<std::endl;
         }
 
         //如果依然有剩余任务，继续通知其它的线程执行任务
