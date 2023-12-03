@@ -148,7 +148,7 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
 {
     auto lastTime = std::chrono::high_resolution_clock().now();
 
-    while(isPoolRuning_)
+    for(;;)
     {
         std::shared_ptr<Task> task;
         {//保证取出任务立马释放锁，让别的线程去取任务，而不是等到任务执行结束再释放
@@ -160,8 +160,15 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
             //(超过initThreadSize数量的线程要进行回收)
             //当前时间 - 上一次线程执行的时间 > 60s
                 //每一秒中返回一次 怎么区分：超时返回？还是任务执行返回
-            while(isPoolRuning_ && taskQue_.size() == 0)
+            while(taskQue_.size() == 0)
             {
+                if(!isPoolRuning_)
+                {
+                    threads_.erase(threadid);
+                    std::cout<<"===threadid"<<std::this_thread::get_id()<<"exit===!"<<std::endl;
+                    exitCond_.notify_all();
+                    return;//线程函数结束线程结束
+                }
                 if(poolMode_ == PoolMode::MODE_CACHED)
                 {
                     //条件变量，超时返回了
@@ -189,11 +196,6 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
                     notEmpty_.wait(lock);
                 }
                 
-                //线程池要结束，回收线程资源
-                if(!isPoolRuning_)
-                {
-                   break;
-                }
             }
             
             idleThreadSize_--;
@@ -225,9 +227,7 @@ void ThreadPool::threadFunc(int threadid)//线程函数执行完，线程结束
         
     }
 
-    threads_.erase(threadid);
-    std::cout<<"===threadid"<<std::this_thread::get_id()<<"exit===!"<<std::endl;
-    exitCond_.notify_all();
+  
 }
 
 //////////////////////////////Task方法实现
