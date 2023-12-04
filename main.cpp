@@ -1,53 +1,29 @@
 #include "threadpool.h"
 #include <iostream>
-#include <chrono>
-#include <thread>
-class MyTask : public Task
-{
-public:
-    MyTask(int a,int b):a_(a),b_(b){}
-    Any run()//在线程池分配的线程中做事情
+#include <future>
+using namespace std;
+
+//任务函数
+int run(int a,int b)//在线程池分配的线程中做事情
     {
-       // std::cout<<"begin threadFunc  tid:"<<std::this_thread::get_id()<<std::endl;
-        
-        //std::this_thread::sleep_for(std::chrono::seconds(3));
-        for(int i=a_+1;i<=b_;i++)
-        {
-            a_+=i; 
-        }
-        //std::cout<<std::this_thread::get_id()<<"执行任务结束"<<std::endl;
-        return a_;
+        return a + b;
     }  
-    private:
-        int a_;  
-        int b_;
-};
+
 int main()
 {
     ThreadPool pool;
     //设置线程池工作模式
-    pool.setMode(PoolMode::MODE_FIXED);
-    //开启线程池
-    pool.start(1);
+    pool.setMode(PoolMode::MODE_CACHED);//PoolMode::MODE_CACHED:可变线程  PoolMode::MODE_FIXED:固定线程
+
+    //pool.setTaskQueMaxThreadHold(1024);//设置任务队列上限阈值(可省略)
+    //pool.setThreadSizeThreshHold(10);//设置线程上限阈值(可省略)
+
+
+    pool.start(4);//开启线程池，初始线程数量(可设空)
 
     //将任务提交给线程池
-    Result res1 = pool.submitTask(std::make_shared<MyTask>(1,1000));
-     Result res2 =pool.submitTask(std::make_shared<MyTask>(1000,10000));
-    Result res3 = pool.submitTask(std::make_shared<MyTask>(1100000,150000000));
+    future<int> res1 = pool.submitTask(run,1,5);//传入任务函数和参数
 
-    
-   
-  
- 
-
-    int sum1 = res1.get().case_<int>();//获取结果会等线程执行结束，必须放在最后防止阻塞
-    int sum2 = res2.get().case_<int>();
-    int sum3 = res3.get().case_<int>();
-
-
-    std::cout<<"sum="<<sum1+sum2+sum3<<std::endl;
-
-    
-    //getchar();
+    cout<<res1.get()<<endl;//获取返回值
  
 }
