@@ -30,6 +30,8 @@
           pool.start(4);  
           Result res = pool.submitTask(std::make_shared<MyTask>(参数));  
           cout<<res.get().case_<int>()<<endl;  
+        * 4、编译 ```g++ main.cpp pthreadpool.h -lpthread```
+        * 5、运行``` ./a.out```
 
         
         
