@@ -13,8 +13,8 @@
 ### 快速运行：
   * 方式一：
     * 直接使用头文件和源文件->[src文件]
-    * 1.编写MyTask派生类(确定参数和任务)
-    * 2.ThreadPool pool;  
+      * 1.编写MyTask派生类(确定参数和任务)
+      * 2.ThreadPool pool;  
        pool.setMode(PoolMode::MODE_CACHED);  
        pool.start(4);  
        Result res = pool.submitTask(std::make_shared<MyTask>(参数));  
