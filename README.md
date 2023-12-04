@@ -1,6 +1,6 @@
 # ThreadPool
 ## 支持fixed和cached模式下支持返回值线程池
-平台工具：vscode远程连接Linux服务器
+平台工具：vscode远程连接Linux服务器    
 项目描述：
 * 1、基于可变惨模板编程和引用折叠原理，实现线程池submitTask接口，支持任意任务函数和任意参数的传递
 * 2、使用future类型定制submitTask提交任务的返回值
@@ -11,21 +11,23 @@
 
 ***
 
-###有两个版本  
-    * dev纯手动实现复杂版
-    * 采用future类型定制简洁版
+### 有两个版本  
+   * 分支dev：纯手动实现复杂版
+   * 分支main：采用future类型定制简洁版
 
-### 快速运行：
-  * 方式一：
-    * 1、引入线程池头文件 #include"threadpool.h"
-    * 2、编写任务函数
-    ``c++
-       ThreadPool pool;  //创建线程池对象
-       pool.setMode(PoolMode::MODE_CACHED); //设置工作模式 固定线程PoolMode::MODE_CACHED  动态线程PoolMode::MODE_FIXED
-       pool.start(4); //启动线程池
-      future<int> res1 = pool.submitTask(run,1,5);//提交任务函数 函数名 参数
-       cout<<res1.get()<<endl; //获取执行结果
-    ``
+### 快速运行  
+   * 1、引入线程池头文件 #include"threadpool.h"
+   * 2、编写任务函数
+   * 3、使用线程池
+     ``` C++
+     ThreadPool pool;  //创建线程池对象  
+     pool.setMode(PoolMode::MODE_CACHED); //设置工作模式 固定线程PoolMode::MODE_CACHED  动态线程PoolMode::MODE_FIXED  
+     pool.start(4); //启动线程池  
+     future<int> res1 = pool.submitTask(run,1,5);//提交任务函数 函数名 参数  
+     cout<<res1.get()<<endl; //获取执行结果  
+     ```
+   * 4、编译 ```g++ main.cpp pthreadpool.h -lpthread```
+   * 5、运行``` ./a.out```
     
         
         
