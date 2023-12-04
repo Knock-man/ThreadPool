@@ -14,22 +14,22 @@
   * 方式一：
     * 直接使用头文件和源文件->[src文件]
     * 1.编写MyTask派生类(确定参数和任务)
-    * 2.ThreadPool pool;
-    * pool.setMode(PoolMode::MODE_CACHED);
-    * pool.start(4);
-    * Result res = pool.submitTask(std::make_shared<MyTask>(参数));
-    * cout<<res.get().case_<int>()<<endl;
+    * 2.ThreadPool pool;  
+       pool.setMode(PoolMode::MODE_CACHED);  
+       pool.start(4);  
+       Result res = pool.submitTask(std::make_shared<MyTask>(参数));  
+       cout<<res.get().case_<int>()<<endl;  
     
   * 方式二：
     * 使用链接->[link文件]
         * 1.将threadpool.h 文件复制到 /usr/local/include 目录中
           将libthpool.so 文件复制到 /usr/local/lib 目录中
-        * 2.包含头文件 #include<threadpool.h>  
-        * 3.ThreadPool pool;
-          pool.setMode(PoolMode::MODE_CACHED);
-          pool.start(4);
-          Result res = pool.submitTask(std::make_shared<MyTask>(参数));
-          cout<<res.get().case_<int>()<<endl;
+        * 2.包含头文件 #include<threadpool.h>    
+        * 3.ThreadPool pool;  
+          pool.setMode(PoolMode::MODE_CACHED);  
+          pool.start(4);  
+          Result res = pool.submitTask(std::make_shared<MyTask>(参数));  
+          cout<<res.get().case_<int>()<<endl;  
 
         
         
