@@ -1,5 +1,5 @@
 # ThreadPool
-## 支持fixed和cached模式下支持返回值线程池
+## 支持fixed和cached模式下允许返回值线程池
 平台工具：vscode远程连接Linux服务器    
 项目描述：
 * 1、基于可变惨模板编程和引用折叠原理，实现线程池submitTask接口，支持任意任务函数和任意参数的传递
